@@ -131,17 +131,38 @@ endfunction
 "Plug 'critiqjo/lldb.nvim', { 'do': function('DoRemote') }
 Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
     "set omnifunc=syntaxcomplete#Complete
+    " omnicompletion
+    set completeopt=noselect,menuone,longest
+    "set completeopt-=preview
+
 
     " see http://stackoverflow.com/questions/7722177/how-do-i-map-ctrl-x-ctrl-o-to-ctrl-space-in-terminal-vim
-    imap <C-@> <C-Space>
-    inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
     let g:deoplete#enable_at_startup = 1
     let g:deoplete#disable_auto_complete = 1
+    let g:deoplete#enable_smart_case = 1
+
+    imap <C-@> <C-Space>
+    inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
+
+    " <C-h>, <BS>: close popup and delete backword char.
+    inoremap <expr><C-h> deoplete#smart_close_popup()."\<C-h>"
+    inoremap <expr><BS>  deoplete#smart_close_popup()."\<C-h>"
+    inoremap <expr><esc> pumvisible() ? deoplete#undo_completion() : '<esc>'
+    inoremap <expr><C-g>     deoplete#undo_completion()
+    inoremap <expr><C-l>     deoplete#refresh()
+
+    " <CR>: close popup and save indent.
+    inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+    function! s:my_cr_function() abort
+        return deoplete#close_popup() . "\<CR>"
+    endfunction
 
     Plug 'Shougo/neoinclude.vim'
     Plug 'Shougo/context_filetype.vim'
 
     Plug 'othree/es.next.syntax.vim'
+    Plug 'zchee/deoplete-jedi'
+    Plug 'Shougo/neco-vim'
 
 
 Plug 'davidhalter/jedi-vim'
@@ -803,10 +824,6 @@ set guioptions-=T
 set guioptions-=e           " text mode tabbar
 set guiheadroom=0
 set cpoptions+=$ " dollar sign while changing
-
-" omnicompletion
-set completeopt=menuone,longest
-"set completeopt-=preview
 
 set gcr=a:blinkon0
 " In many terminal emulators the mouse works just fine, thus enable it.
