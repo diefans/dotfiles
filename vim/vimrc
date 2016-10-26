@@ -1,5 +1,5 @@
-
 "
+
 " see: http://nvie.com/posts/how-i-boosted-my-vim/
 " see: https://github.com/amix/vimrc/blob/master/vimrcs/basic.vim
 " see: https://github.com/zenbro/dotfiles/blob/master/.nvimrc#L151-L187
@@ -11,15 +11,24 @@ if has('nvim')
     " http://neovim.io/doc/user/nvim_python.html
     "let g:loaded_python_provider = 0
     let g:python_host_prog='/usr/bin/python'
-    let g:python3_host_prog='/usr/bin/python3'
+    let g:python_host_skip_check = 1
+    let g:python3_host_prog='/Library/Frameworks/Python.framework/Versions/3.5/bin/python3'
+    let g:python3_host_skip_check = 1
+
+
+    " enable truecolor
+    "let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+    let &t_8f="\e[38;2;%ld;%ld;%ldm"
+    let &t_8b="\e[48;2;%ld;%ld;%ldm"
+
 endif
 
 let mapleader=" "
 let maplocalleader="\\"
 
 " Autoinstall vim-plug {{{
-if empty(glob('~/.nvim/autoload/plug.vim'))
-  silent !curl -fLo ~/.nvim/autoload/plug.vim --create-dirs
+if empty(glob('~/.config/nvim/autoload/plug.vim'))
+  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   autocmd VimEnter * PlugInstall
 endif
@@ -29,10 +38,21 @@ endif
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Plugins initialization start {{{
-call plug#begin('~/.nvim/plugged')
+call plug#begin('~/.config/nvim/plugged')
 " }}}
 
+Plug 'jszakmeister/vim-togglecursor'
+
+"set viminfo='100,n$HOME/.config/nvim/files/info/.viminfo
+"set viminfo='100,n$HOME/.viminfo
 Plug 'mhinz/vim-startify'
+    let g:startify_change_to_dir = 0
+    let g:startify_change_to_vcs_root = 1
+    let g:startify_bookmarks = [
+        \ {'a': '~/.config/awesome/rc.lua'},
+        \ {'v': '~/.config/nvim/init.vim'},
+        \ {'b': '~/.bash_profile'}
+        \ ]
 
 "------------------------------- local vimrc
 "Plug 'MarcWeber/vim-addon-local-vimrc'
@@ -51,7 +71,7 @@ Plug 'Shougo/vimproc', { 'do': 'make' }
 "            \     'unix' : 'gmake',
 "            \    },
 "            \ }
-Plug 'Shougo/unite.vim'
+"Plug 'Shougo/unite.vim'
 ""call unite#filters#matcher_default#use(['matcher_fuzzy'])
 ""nnoremap <C-p> :Unite file_rec/async<cr>
 "let g:unite_source_grep_command = 'ack-grep'
@@ -62,8 +82,8 @@ Plug 'Shougo/unite.vim'
 "nnoremap <space>y :Unite history/yank<cr>
 "nnoremap <space>s :Unite -quick-match buffer<cr>
 
-Plug 'Shougo/vimshell.vim'
-Plug 'Shougo/vimfiler.vim'
+"Plug 'Shougo/vimshell.vim'
+"Plug 'Shougo/vimfiler.vim'
 
     map  :VimFilerExplorer<CR>
 
@@ -77,8 +97,10 @@ Plug 'Shougo/vimfiler.vim'
 "Plug 'jmcantrell/vim-virtualenv'
 
 Plug 'lambdalisue/vim-pyenv'
-Plug 'bfredl/nvim-ipy'
-    let g:nvim_ipy_perform_mappings = 0
+
+" problems with mac, no ipykernel module
+"Plug 'bfredl/nvim-ipy'
+"    let g:nvim_ipy_perform_mappings = 0
 
 "------------------------------- python completion
 "Plug 'Valloric/YouCompleteMe', { 'do': './install.py' }
@@ -102,25 +124,44 @@ Plug 'bfredl/nvim-ipy'
 
 
 " completion
-"Plug 'Shougo/deoplete.nvim'
-"    let g:deoplete#enable_at_startup = 1
+
+function! DoRemote(arg)
+  UpdateRemotePlugins
+endfunction
+"Plug 'critiqjo/lldb.nvim', { 'do': function('DoRemote') }
+Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
+    "set omnifunc=syntaxcomplete#Complete
+
+    " see http://stackoverflow.com/questions/7722177/how-do-i-map-ctrl-x-ctrl-o-to-ctrl-space-in-terminal-vim
+    imap <C-@> <C-Space>
+    inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
+    let g:deoplete#enable_at_startup = 1
+    let g:deoplete#disable_auto_complete = 1
+
+    Plug 'Shougo/neoinclude.vim'
+    Plug 'Shougo/context_filetype.vim'
+
+    Plug 'othree/es.next.syntax.vim'
 
 
 Plug 'davidhalter/jedi-vim'
+    "let g:jedi#auto_initialization = 0
+    let g:jedi#auto_vim_configuration = 0       " dont set completeopt and mal ESC to C-C
+    let g:jedi#completions_enabled = 0
+
     let g:jedi#show_call_signatures = 0
     let g:jedi#use_tabs_not_buffers = 1
-    let g:jedi#goto_assignments_command = "<leader>jg"
-    let g:jedi#goto_definitions_command = "<leader>jd"
+    let g:jedi#goto_assignments_command = "<leader>gg"
+    let g:jedi#goto_definitions_command = "<leader>gd"
     let g:jedi#documentation_command = "K"
-    let g:jedi#completions_command = "<C-Space>"
+    "let g:jedi#completions_command = "<C-Space>"
     let g:jedi#rename_command = "<leader>jr"
     let g:jedi#usages_command = "<leader>ju"
     let g:jedi#popup_on_dot = 0
     let g:jedi#popup_select_first = 2
-    let g:jedi#auto_vim_configuration = 0       " dont set completeopt and mal ESC to C-C
     let g:jedi#smart_auto_mappings = 0
     "let g:jedi#squelch_py_warning = 1
-    autocmd FileType python setlocal omnifunc=jedi#completions
+    "autocmd FileType python setlocal omnifunc=jedi#completions
 
 "------------------------------- python-mode settings
 " I keep python-mode only for better syntax than syntastics
@@ -161,16 +202,19 @@ Plug 'davidhalter/jedi-vim'
 "------------------------------- python pep8
 Plug 'hynek/vim-python-pep8-indent'
 
+" indent is not right
+"Plug 'hattya/python-indent.vim', { 'for': 'python' }
+
 "------------------------------- python coverage
 Plug 'alfredodeza/coveragepy.vim'
 
 "------------------------------- python syntax
-" TODO extract python-mode syntax only
-Plug 'git@github.com:diefans/vim-python.git'
+Plug 'diefans/python-syntax'
 "let g:dapy_syntax = 1
-"Plug 'https://github.com/s0undt3ch/python-syntax.git'
+"Plug 's0undt3ch/python-syntax.git'
 "Plug 'https://github.com/cloudformdesign/vim-python.git'
-"Plug 'https://github.com/hdima/python-syntax.git'
+"Plug 'hdima/python-syntax'
+"Plug 'kh3phr3n/python-syntax'
 
 "------------------------------- text objects: ai ii aI iI
 Plug 'michaeljsmith/vim-indent-object'
@@ -179,17 +223,27 @@ Plug 'michaeljsmith/vim-indent-object'
 "Plug 'pangloss/vim-javascript'
 "Plug 'othree/javascript-libraries-syntax.vim'
 "Plug 'jelera/vim-javascript-syntax'
-Plug 'claco/jasmine.vim'
-Plug 'isRuslan/vim-es6'
+"Plug 'claco/jasmine.vim'
+"Plug 'isRuslan/vim-es6'
 Plug 'jason0x43/vim-js-indent'
-Plug 'Quramy/tsuquyomi'
+Plug 'othree/yajs.vim'
+" does not play well with neomake/tsc
+"Plug 'Quramy/tsuquyomi'
 Plug 'leafgarland/typescript-vim'
+    let g:typescript_indent_disable = 1
 "Plug 'Seikho/typescript-tools'
 "let g:TSS = ['tss', '--experimentalDecorators']
 "Plug 'clausreinke/typescript-tools'
 
+" do not user single quotes
+"autocmd FileType typescript inoremap " '
+"autocmd FileType typescript inoremap ' "
+
+"Plug 'mhartington/deoplete-typescript'
+
+"Plug 'carlitux/deoplete-ternjs'
 " autocompletion
-Plug 'marijnh/tern_for_vim'
+"Plug 'marijnh/tern_for_vim'
     let g:tern_map_keys = 1
     let g:tern_show_argument_hints = 'on_hold'
 
@@ -222,8 +276,7 @@ Plug 'hail2u/vim-css3-syntax'
 "Plug 'miripiruni/vim-better-css-indent'
 
 "------------------------------- write html in css style
-Plug 'digitaltoad/vim-jade'
-    au BufNewFile,BufRead *.jade set ft=jade
+Plug 'https://github.com/diefans/vim-pug.git'
 
 "Plug 'rstacruz/sparkup'
 ", {'rtp': 'vim/'}
@@ -238,13 +291,15 @@ Plug 'mitsuhiko/vim-jinja'
     "au BufNewFile,BufRead *.html,*.htm,*.shtml,*.stm,*.j2,*.jinja,*.jinja2 set ft=jinja
     au BufNewFile,BufRead *.j2 set ft=jinja
 
-""------------------------------- Ansible YAML
-Plug 'chase/vim-ansible-yaml'
-    au BufRead,BufNewFile *group_vars/* set ft=ansible
+"------------------------------- standard YAML
+Plug 'ingydotnet/yaml-vim'
+"Plug 'hhys/yaml-vim'
+"Plug 'diefans/vim-da-yaml'
 
+"------------------------------- Ansible YAML
+Plug 'pearofducks/ansible-vim'
+"Plug 'chase/vim-ansible-yaml'
 
-""------------------------------- standard YAML
-Plug 'diefans/vim-da-yaml'
 
 "------------------------------- ReSructuredText
 " disabled: https://github.com/Rykka/clickable.vim/issues/5
@@ -257,7 +312,8 @@ Plug 'Rykka/riv.vim'
     let g:riv_disable_folding = 1
 Plug 'Rykka/InstantRst'
 
-Plug 'nvie/vim-rst-tables'
+" uses vim_bridge, which is not available
+"Plug 'nvie/vim-rst-tables'
 
 "------------------------------- LaTeX
 "Plug 'gerw/vim-latex-suite'
@@ -277,10 +333,12 @@ Plug 'evanmiller/nginx-vim-syntax'
 
 "------------------------------- NeoMake
 " code checker for neovim
-Plug 'benekastah/neomake'
+Plug 'neomake/neomake'
     autocmd! BufWritePost * Neomake
     autocmd! BufWinEnter * Neomake
 
+    let g:neomake_verbose = 1
+    let g:neomake_logfile='/tmp/error.log'
     let g:neomake_open_list = 2
     let g:neomake_list_height = 6
 
@@ -294,12 +352,14 @@ Plug 'benekastah/neomake'
                 \ 'texthl': 'ErrorMsg',
                 \ }
 
-    "let g:neomake_python_pylama_maker =
-    let g:neomake_python_enable_makers = ['pylama']
+    "let g:neomake_python_pylama_maker = 'flake8'
+    "let g:neomake_python_enabled_makers = ['pep8', 'flake8', 'pyflakes', 'pylint']
+    let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted']
 
+    " make tsc lookup tsconfig.json in ./
     let g:neomake_typescript_tsc_maker = {
                 \ 'args': [
-                \ '--experimentalDecorators', '-m', 'commonjs', '--noEmit'
+                \   '--experimentalDecorators', '--noEmit'
                 \ ],
                 \ 'errorformat':
                 \ '%E%f %#(%l\,%c): error %m,' .
@@ -309,8 +369,30 @@ Plug 'benekastah/neomake'
                 \ }
     let g:neomake_typescript_enable_makers = ['tsc']
 
+    " esnext
+    "let g:neomake_javascript_jscs_maker = {
+    "    \ 'exe': 'jscs',
+    "    \ 'args': ['--no-color', '--preset', 'airbnb', '--reporter', 'inline'],
+    "    \ 'errorformat': '%f: line %l\, col %c\, %m',
+    "    \ }
+    "let g:neomake_javascript_enabled_makers = ['jscs']
+
+    let g:neomake_javascript_enabled_makers = ['eslint']
+
+    nnoremap <Leader>ßo :lopen<CR>      " open location window
+    nnoremap <Leader>ßc :lclose<CR>     " close location window
+    nnoremap <Leader>ßg :ll<CR>         " go to current error/warning
+    nnoremap <Leader>ßn :lnext<CR>      " next error/warning
+    nnoremap <Leader>ßp :lprev<CR>      " previous error/warning
+    nnoremap <Leader>ßj :lnext<CR>      " next error/warning
+    nnoremap <Leader>ßk :lprev<CR>      " previous error/warning
+
 "------------------------------- syntastic
 "Plug 'scrooloose/syntastic'
+
+    "let g:tsuquyomi_disable_quickfix = 1
+    "let g:syntastic_typescript_checkers = ['tsuquyomi']
+
 "    let g:syntastic_php_checkers = ['php']
 "    let g:syntastic_disabled_filetypes = ['xml']        " xml checking might be very slow
 "    let g:syntastic_xml_checkers = []
@@ -340,17 +422,19 @@ Plug 'benekastah/neomake'
 "    "let g:syntastic_echo_current_error = 0
 
 "------------------------------- repo stuff
-Plug 'sjl/splice.vim'
-Plug 'vim-scripts/vcscommand.vim'
-Plug 'airblade/vim-gitgutter'
-    let g:gitgutter_max_signs = 2000
+"Plug 'sjl/splice.vim'
+"Plug 'vim-scripts/vcscommand.vim'
+Plug 'mhinz/vim-signify'
+
+"Plug 'airblade/vim-gitgutter'
+    "let g:gitgutter_max_signs = 2000
 
 Plug 'tpope/vim-fugitive'
-    nnoremap <leader>Gs :Gstatus<CR>
-    nnoremap <leader>Gc :Gcommit<CR>
+    "nnoremap <leader>Gs :Gstatus<CR>
+    "nnoremap <leader>Gc :Gcommit<CR>
 
-Plug 'mattn/webapi-vim'
-Plug 'mattn/gist-vim'
+"Plug 'mattn/webapi-vim'
+"Plug 'mattn/gist-vim'
 
 
 " -----------------------------------------------------------------------------
@@ -359,193 +443,12 @@ Plug 'mattn/gist-vim'
 
 "------------------------------- Powerline/Airline
 "Plug 'bling/vim-bufferline'
-"Plug 'bling/vim-airline'
-"    let g:airline_powerline_fonts = 1
-"    let g:airline#extensions#tabline#enabled = 1
-
-Plug 'itchyny/lightline.vim'
-    let g:lightline = {
-                \ 'colorscheme': 'wombat',
-                \ 'mode_map': { 'c': 'NORMAL' },
-                \ 'active': {
-                \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
-                \   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype' ] ]
-                \ },
-                \ 'component': {
-                \   'readonly': '%{&filetype=="help"?"":&readonly?"⭤":""}',
-                \   'modified': '%{&filetype=="help"?"":&modified?"+":&modifiable?"":"-"}'
-                \ },
-                \ 'component_function': {
-                \   'fugitive': 'MyFugitive',
-                \   'filename': 'MyFilename',
-                \   'fileformat': 'MyFileformat',
-                \   'filetype': 'MyFiletype',
-                \   'fileencoding': 'MyFileencoding',
-                \   'mode': 'MyMode',
-                \   'ctrlpmark': 'CtrlPMark',
-                \ },
-                \ 'component_expand': {
-                \   'syntastic': 'SyntasticStatuslineFlag',
-                \ },
-                \ 'component_type': {
-                \   'syntastic': 'error',
-                \ },
-                \ 'component_visible_condition': {
-                \   'readonly': '(&filetype!="help"&& &readonly)',
-                \   'modified': '(&filetype!="help"&&(&modified||!&modifiable))'
-                \ },
-                \ 'separator': { 'left': '', 'right': '' },
-                \ 'subseparator': { 'left': '', 'right': '' }
-                \ }
-
-
-    "function! MyModified()
-    "  return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-    "endfunction
-
-    "function! MyReadonly()
-    "  return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? '' : ''
-    "endfunction
-
-    "function! MyFilename()
-    "  return ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
-    "        \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-    "        \  &ft == 'unite' ? unite#get_status_string() :
-    "        \  &ft == 'vimshell' ? vimshell#get_status_string() :
-    "        \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
-    "        \ ('' != MyModified() ? ' ' . MyModified() : '')
-    "endfunction
-
-    "function! MyFugitive()
-    "  if &ft !~? 'vimfiler\|gundo' && exists("*fugitive#head")
-    "    let _ = fugitive#head()
-    "    return strlen(_) ? ' '._ : ''
-    "  endif
-    "  return ''
-    "endfunction
-
-    "function! MyFileformat()
-    "  return winwidth(0) > 70 ? &fileformat : ''
-    "endfunction
-
-    "function! MyFiletype()
-    "  return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
-    "endfunction
-
-    "function! MyFileencoding()
-    "  return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
-    "endfunction
-
-    "function! MyMode()
-    "  return winwidth(0) > 60 ? lightline#mode() : ''
-    "endfunction
-
-
-    function! MyModified()
-      return &ft =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-    endfunction
-
-    function! MyReadonly()
-      return &ft !~? 'help' && &readonly ? '' : ''
-    endfunction
-
-    function! MyFilename()
-      let fname = expand('%:t')
-      return fname == 'ControlP' ? g:lightline.ctrlp_item :
-            \ fname == '__Tagbar__' ? g:lightline.fname :
-            \ fname =~ '__Gundo\|NERD_tree' ? '' :
-            \ &ft == 'vimfiler' ? vimfiler#get_status_string() :
-            \ &ft == 'unite' ? unite#get_status_string() :
-            \ &ft == 'vimshell' ? vimshell#get_status_string() :
-            \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
-            \ ('' != fname ? fname : '[No Name]') .
-            \ ('' != MyModified() ? ' ' . MyModified() : '')
-    endfunction
-
-    function! MyFugitive()
-      try
-        if expand('%:t') !~? 'Tagbar\|Gundo\|NERD' && &ft !~? 'vimfiler' && exists('*fugitive#head')
-          let mark = ' '  " edit here for cool mark
-          let _ = fugitive#head()
-          return strlen(_) ? mark._ : ''
-        endif
-      catch
-      endtry
-      return ''
-    endfunction
-
-    function! MyFileformat()
-      return winwidth(0) > 70 ? &fileformat : ''
-    endfunction
-
-    function! MyFiletype()
-      return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
-    endfunction
-
-    function! MyFileencoding()
-      return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
-    endfunction
-
-    function! MyMode()
-      let fname = expand('%:t')
-      return fname == '__Tagbar__' ? 'Tagbar' :
-            \ fname == 'ControlP' ? 'CtrlP' :
-            \ fname == '__Gundo__' ? 'Gundo' :
-            \ fname == '__Gundo_Preview__' ? 'Gundo Preview' :
-            \ fname =~ 'NERD_tree' ? 'NERDTree' :
-            \ &ft == 'unite' ? 'Unite' :
-            \ &ft == 'vimfiler' ? 'VimFiler' :
-            \ &ft == 'vimshell' ? 'VimShell' :
-            \ winwidth(0) > 60 ? lightline#mode() : ''
-    endfunction
-
-    function! CtrlPMark()
-      if expand('%:t') =~ 'ControlP'
-        call lightline#link('iR'[g:lightline.ctrlp_regex])
-        return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
-              \ , g:lightline.ctrlp_next], 0)
-      else
-        return ''
-      endif
-    endfunction
-
-    let g:ctrlp_status_func = {
-      \ 'main': 'CtrlPStatusFunc_1',
-      \ 'prog': 'CtrlPStatusFunc_2',
-      \ }
-
-    function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
-      let g:lightline.ctrlp_regex = a:regex
-      let g:lightline.ctrlp_prev = a:prev
-      let g:lightline.ctrlp_item = a:item
-      let g:lightline.ctrlp_next = a:next
-      return lightline#statusline(0)
-    endfunction
-
-    function! CtrlPStatusFunc_2(str)
-      return lightline#statusline(0)
-    endfunction
-
-    let g:tagbar_status_func = 'TagbarStatusFunc'
-
-    function! TagbarStatusFunc(current, sort, fname, ...) abort
-        let g:lightline.fname = a:fname
-      return lightline#statusline(0)
-    endfunction
-
-    augroup AutoSyntastic
-      autocmd!
-      autocmd BufWritePost *.c,*.cpp call s:syntastic()
-    augroup END
-    function! s:syntastic()
-      SyntasticCheck
-      call lightline#update()
-    endfunction
-
-    let g:unite_force_overwrite_statusline = 0
-    let g:vimfiler_force_overwrite_statusline = 0
-    let g:vimshell_force_overwrite_statusline = 0
-    set noshowmode
+Plug 'bling/vim-airline'
+    let g:airline_powerline_fonts = 1
+    let g:airline#extensions#tabline#enabled = 1
+    let g:airline#extensions#tabline#show_buffers = 0
+    let g:airline#extensions#tabline#show_tabs = 1
+    let g:airline#extensions#tabline#show_close_button = 0
 
 
 "------------------------------- grep ag git
@@ -561,7 +464,7 @@ Plug 'junegunn/fzf.vim'
     inoremap <silent> <c-p> <c-o>:FZF --history ~/.fzf_history --bind alt-n:down,alt-p:up,ctrl-n:next-history,ctrl-p:previous-history<CR>
 
     nnoremap <silent> <leader><space> :Files<CR>
-    nnoremap <silent> <leader>a :Buffers<CR>
+    nnoremap <silent> <leader>b :Buffers<CR>
     nnoremap <silent> <leader>, :BLines<CR>
     nnoremap <silent> <leader>. :Lines<CR>
     nnoremap <silent> <leader>o :BTags<CR>
@@ -596,26 +499,6 @@ Plug 'junegunn/fzf.vim'
 "------------------------------- registers
 Plug 'junegunn/vim-peekaboo'
 
-"------------------------------- easy file opening crtl-p
-"Plug 'kien/ctrlp.vim'
-"    let g:ctrlp_open_new_file = 't'
-"    " let g:ctrlp_working_path_mode = 'rc'
-"    let g:ctrlp_custom_ignore = {
-"                \ 'dir':  '\v[\/]\.(git|hg|svn)$',
-"                \ 'file': '\v\.(exe|so|dll|pyc|tags)$',
-"                \ 'link': 'some_bad_symbolic_links',
-"                \ }
-
-"    let g:ctrlp_user_command = {
-"                \ 'types': {
-"                \ 1: ['.git', 'cd %s && git ls-files'],
-"                \ 2: ['.hg', 'hg --cwd %s locate -I .'],
-"                \ },
-"                \ 'fallback': 'find %s -type f'
-"                \ }
-
-"    " ctrlp buffers
-"    "map  <leader>b * :<C-U>CtrlPBuffer<CR>
 
 "------------------------------- tags
 set tags=./.tags;,~/.vimtags
@@ -668,16 +551,27 @@ Plug 'go2null/Mark--Karkat'
     noremap <localleader>/ <Plug>MarkSearchAnyNext
 
 "------------------------------- easy un/commenting
-Plug 'tpope/vim-commentary'
+"Plug 'tpope/vim-commentary'
 
 Plug 'scrooloose/nerdcommenter'
     let g:NERDCustomDelimiters = { 'python' : { 'left': '# ', 'leftAlt': '', 'rightAlt': '' }}
     "map  :NERDTreeToggle \| :silent NERDTreeMirror<CR>
     "map <F5> :NERDTreeToggle \| :silent NERDTreeMirror<CR>
 
-"------------------------------- markdonw syntax
+"------------------------------- markdown syntax
+function! BuildComposer(info)
+  if a:info.status != 'unchanged' || a:info.force
+    !cargo build --release
+    UpdateRemotePlugins
+  endif
+endfunction
+
+Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
+    let g:markdown_composer_open_browser = 1
+    let g:markdown_composer_autostart = 0
+
 Plug 'tpope/vim-markdown'
-Plug 'shime/vim-livedown'
+"Plug 'shime/vim-livedown'
     " should markdown preview get shown automatically upon opening markdown buffer
     let g:livedown_autorun = 0
 
@@ -687,9 +581,13 @@ Plug 'shime/vim-livedown'
     " the port on which Livedown server will run
     let g:livedown_port = 1337
 
+    nnoremap gm :LivedownToggle<CR>
+
+"------------------------------- tables
+Plug 'dhruvasagar/vim-table-mode'
 
 "------------------------------- easy session management
-Plug 'tpope/vim-obsession'
+"Plug 'tpope/vim-obsession'
 
 "------------------------------- repeat support for tpope stuff
 Plug 'tpope/vim-repeat'
@@ -708,7 +606,7 @@ Plug 'gregsexton/MatchTag'
 "Plug 'godlygeek/tabular'
 
 "------------------------------- search ag, ack-grep
-Plug 'mileszs/ack.vim'
+"Plug 'mileszs/ack.vim'
 Plug 'rking/ag.vim'
 
 
@@ -738,8 +636,8 @@ Plug 'Lokaltog/vim-easymotion'
 Plug 'sjl/gundo.vim'
 
 "------------------------------- man page view for gvim
-Plug 'pydave/vim-man'
-    nmap K :Man <cword><CR>
+"Plug 'pydave/vim-man'
+"    nmap K :Man <cword><CR>
 
 "------------------------------- inactive but interesting
 "Plug 'vim-scripts/genshi.vim'
@@ -766,7 +664,7 @@ Plug 'pydave/vim-man'
 "Plug 'guyzmo/notmuch-abook'
 
 "------------------------------- gnupg
-Plug 'jamessan/vim-gnupg'
+"Plug 'jamessan/vim-gnupg'
 
 "------------------------------- color stuff
 "Plug 'https://github.com/godlygeek/csapprox.git'
@@ -780,7 +678,7 @@ Plug 'diefans/vim-da-trilight'
                 \              'ctermfg': 'Black', 'ctermbg': 'Yellow',
                 \              'attr': 'bold' },
                 \}
-Plug 'nanotech/jellybeans.vim'
+"Plug 'nanotech/jellybeans.vim'
 
 
 "------------------------------- highlight overlength
@@ -788,7 +686,7 @@ Plug 'nanotech/jellybeans.vim'
 "    call lengthmatters#highlight_link_to('ColorColumn')
 
 "------------------------------- focus
-Plug 'junegunn/limelight.vim'
+"Plug 'junegunn/limelight.vim'
     " Color name (:help cterm-colors) or ANSI code
     let g:limelight_conceal_ctermfg = 'gray'
     let g:limelight_conceal_ctermfg = 240
@@ -812,8 +710,8 @@ Plug 'junegunn/limelight.vim'
     " Highlighting priority (default: 10)
     "   Set it to -1 not to overrule hlsearch
     let g:limelight_priority = -1
-    Plug 'junegunn/goyo.vim'
-    Plug 'junegunn/vim-easy-align'
+    "Plug 'junegunn/goyo.vim'
+    "Plug 'junegunn/vim-easy-align'
 
 call plug#end()
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -830,24 +728,7 @@ syntax on
 autocmd BufEnter * :syntax sync fromstart
 
 
-set nocompatible
-
-if has("multi_byte")
-    if &termencoding == ""
-        let &termencoding = &encoding
-    endif
-    set encoding=utf-8
-    setglobal fileencoding=utf-8
-
-    " not needed
-    "setglobal bomb
-
-    set fileencodings=ucs-bom,utf-8,latin1
-endif
-
-scriptencoding=utf-8
 set fileformats=unix,mac,dos
-
 
 set t_Co=256
 
@@ -959,6 +840,10 @@ set smartcase
 " Highlight search results
 set hlsearch
 
+" ctrl+c to toggle highlight.
+let hlstate=0
+nnoremap <c-c> :if (hlstate%2 == 0) \| nohlsearch \| else \| set hlsearch \| endif \| let hlstate=hlstate+1<cr>
+
 " Makes search act like search in modern browsers
 set incsearch
 
@@ -980,30 +865,6 @@ endif
 """""""""""""""""""""""""""""""" Key mapping
 " Fast saving
 nmap <leader>w :w!<cr>
-
-"" fix meta-keys which generate <Esc>a .. <Esc>z
-"let c='a'
-"while c <= 'z'
-"  exec "set <M-".toupper(c).">=\e".c
-"  exec "imap \e".c." <M-".toupper(c).">"
-"  let c = nr2char(1+char2nr(c))
-"endw
-
-" fix meta-keys to be like terminal for fast moves
-"let c='a'
-"while c <= 'z'
-"    exec "set <M-".c.">=\e".c
-"    exec "set <M-".toupper(c).">=\e".toupper(c)
-"    exec "inoremap <M-".toupper(c)."> <C-C>".toupper(c)
-"    exec "inoremap <M-".c."> <C-C>".c
-"    exec "noremap <M-".toupper(c)."> ".toupper(c)
-"    exec "noremap <M-".c."> ".c
-"    " this does not work with YouCompleteME
-"    " completion moves item to actualk cursor pos
-"    "exec "inoremap <M-".toupper(c)."> <C-O>".toupper(c)
-"    "exec "inoremap <M-".c."> <C-O>".c
-"    let c = nr2char(1+char2nr(c))
-"endw
 
 " Close the current buffer
 map <leader>bd :Bclose<cr>
@@ -1065,11 +926,12 @@ inoremap <C-e> <C-o>$
 " Ctrl + U    Clears the line before the cursor position. If you are at the end of the line, clears the entire line.
 inoremap <C-U> <C-O>d^
 " Ctrl + H    Same as backspace
-inoremap <C-H> <C-O>x
+inoremap <C-H> <C-O>X
 " Ctrl + R    Let’s you search through previously used commands
 " Ctrl + C    Kill whatever you are running
 " Ctrl + D    Exit the current shell
-inoremap <C-D> <C-O>X
+inoremap <C-D> <Del>
+"inoremap <C-D> <C-O>x
 " Ctrl + Z    Puts whatever you are running into a suspended background process. fg restores it.
 " Ctrl + W    Delete the word before the cursor
 inoremap <C-W> <C-O>db
@@ -1080,9 +942,129 @@ inoremap <C-K> <C-O>d$
 " Alt + F     Move cursor forward one word on the current line
 " Alt + B     Move cursor backward one word on the current line
 
+"------------------------------- some more keys
+" Ctrl-Enter
+  set  <F13>=[25~
+  map  <F13> <C-CR>
+  map! <F13> <C-CR>
+
+  " Shift-Enter <S-F2>
+  set  <F14>=[12:2~
+  map  <S-F2> <S-CR>
+  map! <S-F2> <S-CR>
+  map  <F14> <S-CR>
+  map! <F14> <S-CR>
+
+  " Ctrl-Space
+  set  <F16>=[29~
+  map  <F16> <C-Space>
+  map! <F16> <C-Space>
+
+  " Shift-Space
+  "set  <F16>=[30~
+  "map  <F16> <S-Space>
+  "map! <F16> <S-Space>
+
+  " Ctrl-Backspace
+  set  <F17>=[1;5P
+  map  <F17> <C-BS>
+  map! <F17> <C-BS>
+
+  " Alt-Tab
+  set  <F18>=[1;5Q
+  map  <F18> <M-Tab>
+  map! <F18> <M-Tab>
+
+  " Alt-Shift-Tab
+  set  <F19>=[1;5R
+  map  <F19> <M-S-Tab>
+  map! <F19> <M-S-Tab>
+
+  " Alt-Up
+  set  <F30>=[17;5~
+  map  <F30> <C-M-Up>
+  map! <F30> <C-M-Up>
+
+  " Alt-Down
+  set  <F31>=[18;5~
+  map  <F31> <C-M-Down>
+  map! <F31> <C-M-Down>
+
+  " Alt-Right
+  set  <F32>=[19;5~
+  map  <F32> <C-M-Right>
+  map! <F32> <C-M-Right>
+
+  " Alt-Left
+  set  <F33>=[20;5~
+  map  <F33> <C-M-Left>
+  map! <F33> <C-M-Left>
+
+  " Alt-Shift-Up
+  set  <F34>=[21;5~
+  map  <F34> <S-M-Up>
+  map! <F34> <S-M-Up>
+
+  " Alt-Shift-Down
+  set  <F35>=[23;5~
+  map  <F35> <S-M-Down>
+  map! <F35> <S-M-Down>
+
+  " Alt-Shift-Right
+  set  <F36>=[24;5~
+  map  <F36> <S-M-Right>
+  map! <F36> <S-M-Right>
+
+  " Alt-Shift-Left
+  set  <F29>=[15;5~
+  map  <F29> <S-M-Left>
+  map! <F29> <S-M-Left>
+
+  " Ctrl-Up
+  set  <F20>=[1;5A
+  map  <F20> <C-Up>
+  map! <F20> <C-Up>
+
+  " Ctrl-Down
+  set  <F21>=[1;5B
+  map  <F21> <C-Down>
+  map! <F21> <C-Down>
+
+  " Ctrl-Right
+  set  <F22>=[1;5C
+  map  <F22> <C-Right>
+  map! <F22> <C-Right>
+
+  " Ctrl-Left
+  set  <F23>=[1;5D
+  map  <F23> <C-Left>
+  map! <F23> <C-Left>
+
+  " Ctrl-Tab
+  set  <F24>=[31~
+  map  <F24> <C-Tab>
+  map! <F24> <C-Tab>
+
+  " Ctrl-Shift-Tab
+  set  <F25>=[32~
+  map  <F25> <C-S-Tab>
+  map! <F25> <C-S-Tab>
+
+  " Ctrl-Comma
+  set  <F26>=[33~
+  map  <F26> <C-,>
+  map! <F26> <C-,>
+
+  " Ctrl-Shift-Space
+  set  <F27>=[34~
+  map  <F27> <C-S-Space>
+  map! <F27> <C-S-Space>
+
+
+
 "------------------------------- insert e new line and not enter insert
 nnoremap <S-CR> O
-nnoremap [0M O
+"nnoremap [0M O
 nnoremap <CR> o
 
 " pynvim has problems with Del and BS
@@ -1113,8 +1095,10 @@ nnoremap Q gwap
 vnoremap Q gw
 
 "------------------------------- <tab> indents in visual mode
-vnoremap <tab> >
-vnoremap <s-tab> <
+xnoremap < <gv
+xnoremap > >gv
+vnoremap <tab> >gv
+vnoremap <s-tab> <gv
 " <tab><tab> indents without visual selection
 nnoremap <tab><tab> >>
 nnoremap <s-tab><s-tab> <<
@@ -1139,11 +1123,17 @@ noremap <C-l> <C-w>l
 
 "------------------------------- tabs and buffers
 nnoremap <C-M-Left> :tabp<CR>
+nnoremap <M-Up> :tabp<CR>
 nnoremap [1;7D :tabp<CR>
 inoremap <C-M-Left> :tabp<CR>
+nnoremap <leader><left> :tabp<CR>
+
+
 nnoremap <C-M-Right> :tabn<CR>
+nnoremap <M-Down> :tabn<CR>
 nnoremap [1;7C :tabn<CR>
 inoremap <C-M-Right> :tabn<CR>
+nnoremap <leader><right> :tabn<CR>
 
 nnoremap <C-M-Up> :bN<CR>
 nnoremap [1;7A :bN<CR>
@@ -1154,9 +1144,13 @@ inoremap <C-M-Down> :bn<CR>
 
 " shift tab right/left
 nnoremap <C-S-PageUp> :tabm -1<CR>
+nnoremap <S-M-Left> :tabm -1<CR>
 nnoremap <C-S-PageDown> :tabm +1<CR>
+nnoremap <S-M-Right> :tabm +1<CR>
 inoremap <C-S-PageUp> <C-O>:tabm -1<CR>
+inoremap <S-M-Left> <C-O>:tabm -1<CR>
 inoremap <C-S-PageDown> <C-O>:tabm +1<CR>
+inoremap <S-M-Right> <C-O>:tabm +1<CR>
 
 "------------------------------- Ctrl-{direction} to scroll-up
 noremap <C-up> <C-y>
@@ -1271,7 +1265,7 @@ nnoremap <silent> \ß :LocL<CR>
 nnoremap <silent> \q :QFix<CR>
 
 "------------------------------- Shortcut to rapidly toggle `set list`
-nnoremap <leader>l :set list!<CR>
+nnoremap <leader>$ :set list!<CR>
 
 "------------------------------- strip trailing white spaces
 function! StripTrailingWhitespaces()
@@ -1313,7 +1307,7 @@ au InsertLeave * match ExtraWhitespace /\s\+$/
 
 function! HighlightNonBreakingSpace()
     syn match suckingNonBreakingSpace " " containedin=ALL
-    hi suckingNonBreakingSpace guibg=#157249
+    hi suckingNonBreakingSpace guibg=#157249 ctermbg=darkcyan
 endfunction
 au BufEnter * :call HighlightNonBreakingSpace()
 
@@ -1343,12 +1337,12 @@ nnoremap <silent> <expr> <F11> Highlighting()
 """""""""""""""""""""""""""""""" GUI or terminal
 if !has("gui_running")
     " http://powerline.readthedocs.org/en/latest/tipstricks.html
-    set ttimeoutlen=10
-    augroup FastEscape
-        autocmd!
-        au InsertEnter * set timeoutlen=0
-        au InsertLeave * set timeoutlen=1000
-    augroup END
+    "set ttimeoutlen=10
+    "augroup FastEscape
+    "    autocmd!
+    "    au InsertEnter * set timeoutlen=0
+    "    au InsertLeave * set timeoutlen=1000
+    "augroup END
 
 else
     set guifont=Inconsolata-g\ for\ Powerline\ Medium\ 10
@@ -1374,36 +1368,12 @@ else
 endif
 
 
-"""""""""""""""""""""""""""""""" cursor
-if &term =~ "xterm\\|rxvt"
-  " use an orange cursor in insert mode
-  "let &t_SI = "\<Esc>]12;orange\x7"
-
-  "" use a red cursor otherwise
-  "let &t_EI = "\<Esc>]12;red\x7"
-  "silent !echo -ne "\033]12;red\007"
-
-  " reset cursor when vim exits
-  autocmd VimLeave * silent !echo -ne "\033]112\000"
-  " use \003]12;gray\007 for gnome-terminal
-
-  " solid underscore
-  let &t_SI .= "\<Esc>[4 q"
-  " solid block
-  let &t_EI .= "\<Esc>[2 q"
-  " 1 or 0 -> blinking block
-  " 3 -> blinking underscore
-  " Recent versions of xterm (282 or above) also support
-  " 5 -> blinking vertical bar
-  " 6 -> solid vertical bar
-endif
-
-
 """""""""""""""""""""""""""""""" auto create directories
 au! BufNewFile * :exe ': !mkdir -p ' . escape(fnamemodify(bufname('%'),':p:h'),'#% \\')
 
 
-"""""""""""""""""""""""""""""""" color scheme
+"""""""""""""""""""""""""""""""" jump to last known position when reopening a file
+au! BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
 
 """""""""""""""""""""""""""""""" FileType specific stuff
