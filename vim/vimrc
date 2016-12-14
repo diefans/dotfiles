@@ -10,9 +10,11 @@ filetype plugin indent on
 if has('nvim')
     " http://neovim.io/doc/user/nvim_python.html
     "let g:loaded_python_provider = 0
-    let g:python_host_prog='/usr/bin/python'
+    "let g:python_host_prog='/usr/bin/python'
+    let g:python_host_prog='/Users/oberger/.pyenv/versions/neovim2/bin/python'
     let g:python_host_skip_check = 1
-    let g:python3_host_prog='/Library/Frameworks/Python.framework/Versions/3.5/bin/python3'
+    let g:python3_host_prog='/Users/oberger/.pyenv/versions/neovim3/bin/python'
+    "Library/Frameworks/Python.framework/Versions/3.5/bin/python3'
     let g:python3_host_skip_check = 1
 
 
@@ -130,8 +132,19 @@ function! DoRemote(arg)
 endfunction
 "Plug 'critiqjo/lldb.nvim', { 'do': function('DoRemote') }
 Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
+    " omnifuncs
     "set omnifunc=syntaxcomplete#Complete
-    " omnicompletion
+    augroup omnifuncs
+        autocmd!
+        autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+        autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+        autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+        autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+        autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+    augroup end
+    if !exists('g:deoplete#omni#input_patterns')
+        let g:deoplete#omni#input_patterns = {}
+    endif
     set completeopt=noselect,menuone,longest
     "set completeopt-=preview
 
@@ -152,10 +165,10 @@ Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
     inoremap <expr><C-l>     deoplete#refresh()
 
     " <CR>: close popup and save indent.
-    inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-    function! s:my_cr_function() abort
-        return deoplete#close_popup() . "\<CR>"
-    endfunction
+    "inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+    "function! s:my_cr_function() abort
+    "    return deoplete#close_popup() . "\<CR>"
+    "endfunction
 
     Plug 'Shougo/neoinclude.vim'
     Plug 'Shougo/context_filetype.vim'
@@ -164,6 +177,11 @@ Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
     Plug 'zchee/deoplete-jedi'
     Plug 'Shougo/neco-vim'
 
+" sort python imports
+Plug 'Photonios/vim-isort'
+    let g:isort_options = {}
+"Plug 'tweekmonster/impsort.vim'
+"    nnoremap <leader>is :<c-u>ImpSort!<cr>
 
 Plug 'davidhalter/jedi-vim'
     "let g:jedi#auto_initialization = 0
@@ -264,9 +282,11 @@ Plug 'leafgarland/typescript-vim'
 
 "Plug 'carlitux/deoplete-ternjs'
 " autocompletion
-"Plug 'marijnh/tern_for_vim'
+Plug 'marijnh/tern_for_vim'
     let g:tern_map_keys = 1
     let g:tern_show_argument_hints = 'on_hold'
+
+    autocmd FileType javascript setlocal omnifunc=tern#Complete
 
 "Plug 'lcharlick/vim-coffee-script'
 Plug 'strogonoff/vim-coffee-script'
@@ -358,7 +378,7 @@ Plug 'neomake/neomake'
     autocmd! BufWritePost * Neomake
     autocmd! BufWinEnter * Neomake
 
-    let g:neomake_verbose = 1
+    let g:neomake_verbose = 0
     let g:neomake_logfile='/tmp/error.log'
     let g:neomake_open_list = 2
     let g:neomake_list_height = 6
@@ -375,7 +395,7 @@ Plug 'neomake/neomake'
 
     "let g:neomake_python_pylama_maker = 'flake8'
     "let g:neomake_python_enabled_makers = ['pep8', 'flake8', 'pyflakes', 'pylint']
-    let g:neomake_python_enabled_makers = ['python', 'pylama', 'frosted']
+    let g:neomake_python_enabled_makers = ['python', 'pylama']
 
     " make tsc lookup tsconfig.json in ./
     let g:neomake_typescript_tsc_maker = {
@@ -778,6 +798,8 @@ set number
 set foldcolumn=0
 set nofoldenable            " disable folding
 set textwidth=120
+set wrapmargin=0
+
 set colorcolumn=80,120
 set spelllang=en,de
 "set spell
@@ -1415,7 +1437,7 @@ au BufRead,BufNewFile *.zcml :set ft=xml
 au! FileType python setl nosmartindent		" fix nasty comment reindent
 au! FileType htmldjango setl nosmartindent
 au! FileType htmljinja setl nosmartindent
-au! FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+au! FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o formatoptions-=t
 au! FileType c,cpp setlocal comments-=:// comments+=f://
 
 "------------------------------- html indent
@@ -1426,41 +1448,40 @@ let g:html_indent_inctags = "html,body,thead,tbody,tr,th,td,div,section,header,f
 
 
 """""""""""""""""""""""""""""""" python breakpoint
-let g:py_breakpoint_cmd = 'from ipdb import set_trace; set_trace()      # XXX BREAKPOINT'
-python << EOF
+let g:py_breakpoint_cmd = 'from pdb import set_trace; set_trace()      # XXX BREAKPOINT'
 
+let s:venv = eval('$VIRTUAL_ENV')
+if s:venv != ''
+
+    let s:venv_python_version = system(s:venv . '/bin/python --version') " | cut -d" " -f2'))
+    if s:venv_python_version >= '3'
+
+python3 << EOF
+import os, pkg_resources, site
 import vim, os, sys
 
-# just activate the virtual env
-ve_dir = vim.eval('$VIRTUAL_ENV')
-#ve_dir in sys.path or sys.path.insert(0, ve_dir)
-activate_this = os.path.join(os.path.join(ve_dir, 'bin'), 'activate_this.py')
-
-if os.path.exists(activate_this):
-    execfile(activate_this, dict(__file__=activate_this))
-
-import imp
+ws = pkg_resources.WorkingSet()
+for entry in site.getsitepackages([os.environ.get('VIRTUAL_ENV')]):
+    ws.add_entry(entry)
 
 debuggers = [
-    ('pdb', 'set_trace'),
-    ('trepan.api', 'debug'),
-#    ('ipdb', 'set_trace'),
+    ('trepan3k', 'from trepan.api import debug; debug()'),
+    ('pdbpp', 'from pdb import set_trace; set_trace()'),
 ]
-for module, cmd in debuggers:
-    try:
-        # do not import ipdb !!! it raises a ValueError in nvim
-        imp.find_module(module)
-    except ImportError:
-        try:
-            __import__(module)
-        except ImportError:
-            continue
 
-    vim.command(
-        'let g:py_breakpoint_cmd = "from {module} import {cmd}; {cmd}()       # XXX BREAKPOINT"'.format(module=module, cmd=cmd)
-    )
-    break
+for req, break_point_cmd in debuggers:
+    dist = ws.find(pkg_resources.Requirement(req))
+    if dist:
+        vim.command(
+            'let g:py_breakpoint_cmd = "{cmd}       # XXX BREAKPOINT"'.format(cmd=break_point_cmd)
+        )
+        break
 EOF
+    else
+    endif
+endif
+
+
 
 fun! Py_breakpoint_operate(lnum) "{{{
     let line = getline(a:lnum)
